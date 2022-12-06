@@ -6,13 +6,10 @@ import Control.Applicative (liftA2)
 import Control.Arrow ((&&&), (***))
 
 
--- (g <.> f) x y = g x (f x y)
--- (g .: f)  x y = g   (f x y)
-
 (<.>) :: Applicative f => f (b -> c) -> f (a -> b) -> f (a -> c)
 (.:)  ::     Functor f =>   (b -> c) -> f (a -> b) -> f (a -> c)
-(<.>) = liftA2 (.)
-(.:)  = fmap . (.)
+(<.>) = liftA2 (.)  -- (g <.> f) x y = g x (f x y)
+(.:)  = fmap . (.)  -- (g .: f)  x y = g   (f x y)
 
 data Move = Move Int Int Int
 numToMove :: Move -> Int
