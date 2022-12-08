@@ -26,14 +26,16 @@ runCmd (wd, dict)  CdUp    = (tail wd, dict)
 runCmd (wd, dict) (Cd dir) = (dir:wd,  insertInto dict (dir:wd, []))
 runCmd (wd, dict) (F size) = (wd,      insertAtPath wd (File size:) dict)
 
-parse :: String -> PathDict
-parse = populatePathDict . map (parseCmd . words) . lines
-  where populatePathDict =  snd . foldl runCmd ([],[])
-        parseCmd ["dir", _       ] = Ignore
+parse :: String -> [Cmd]
+parse = map (parseCmd . words) . lines
+  where parseCmd ["dir", _       ] = Ignore
         parseCmd ["$", "ls"      ] = Ignore
         parseCmd ["$", "cd", ".."] = CdUp
         parseCmd ["$", "cd", dir ] = Cd dir
         parseCmd [size, _        ] = F (read size)
+
+populatePathDict :: [Cmd] -> PathDict
+populatePathDict = snd . foldl runCmd ([], [])
 
 recursiveSize :: PathDict -> [(Path, Int)]
 recursiveSize = (map =<< flip (foldl sumIfInside)) . map (second $ sum . map fileSize)
@@ -47,4 +49,4 @@ part2 = fromJust . (find =<< (<=) . subtract 40000000 . last) . sort . map snd
 main :: IO ()
 main = do
   input <- readFile "inputs/day7.txt"
-  parse input & recursiveSize & (part1 &&& part2) & print
+  parse input & populatePathDict & recursiveSize & (part1 &&& part2) & print
