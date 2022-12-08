@@ -6,7 +6,7 @@ import Control.Arrow ((&&&))
 import GHC.Utils.Misc (filterOut)
 
 
-data Cmd = Dir | Ls | CdUp |Cd String | F Int
+data Cmd = Ignore | CdUp | Cd String | F Int
 
 newtype File = File {fileSize :: Int}
 
@@ -21,8 +21,7 @@ insertAtPath path f = (insertInto . filterOut isPath) <*> (second f . fromJust .
   where isPath = (path ==) . fst
 
 runCmd :: (Path, PathDict) -> Cmd -> (Path, PathDict)
-runCmd (wd, dict)  Dir     = (wd,      dict)
-runCmd (wd, dict)  Ls      = (wd,      dict)
+runCmd (wd, dict)  Ignore  = (wd,      dict)
 runCmd (wd, dict)  CdUp    = (tail wd, dict)
 runCmd (wd, dict) (Cd dir) = (dir:wd,  insertInto dict (dir:wd, []))
 runCmd (wd, dict) (F size) = (wd,      insertAtPath wd (File size:) dict)
@@ -30,8 +29,8 @@ runCmd (wd, dict) (F size) = (wd,      insertAtPath wd (File size:) dict)
 parse :: String -> PathDict
 parse = populatePathDict . map (parseCmd . words) . lines
   where populatePathDict =  snd . foldl runCmd ([],[])
-        parseCmd ["dir", _       ] = Dir
-        parseCmd ["$", "ls"      ] = Ls
+        parseCmd ["dir", _       ] = Ignore
+        parseCmd ["$", "ls"      ] = Ignore
         parseCmd ["$", "cd", ".."] = CdUp
         parseCmd ["$", "cd", dir ] = Cd dir
         parseCmd [size, _        ] = F (read size)
